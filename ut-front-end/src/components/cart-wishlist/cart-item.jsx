@@ -7,9 +7,14 @@ import Link from "next/link";
 import { CloseIcon, Minus, Plus } from "@/svg";
 import { add_cart_product, quantityDecrement, remove_product } from "@/redux/features/cartSlice";
 import { getCollectionImageById } from "@/utils/imageUtils";
+import { imageConfigDefault } from "next/dist/shared/lib/image-config";
 
 const CartItem = ({product}) => {
   const {_id, img,title,price, orderQuantity = 0 } = product || {};
+
+  const imgUrl = getCollectionImageById(_id) || '/images/placeholder.png';
+  console.log(imgUrl)
+
 
   const dispatch = useDispatch();
 
@@ -33,7 +38,7 @@ const CartItem = ({product}) => {
       <td className="tp-cart-img">
         <Link href={`/product-details/${_id}`}>
           <Image 
-            src={getCollectionImageById(_id)} 
+            src={imgUrl} 
             alt="product img" 
             width={70} 
             height={100} 

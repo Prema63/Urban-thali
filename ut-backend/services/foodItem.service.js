@@ -19,6 +19,7 @@ exports.createFoodItemService = async (data) => {
   return foodItem;
 };
 
+
 // create all foodItem service
 exports.addAllFoodItemService = async (data) => {
   await FoodItem.deleteMany();

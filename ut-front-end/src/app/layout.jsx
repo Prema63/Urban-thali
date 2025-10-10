@@ -13,8 +13,16 @@ export const metadata = {
     shortcut: '/favicon.ico',
     apple: '/favicon.svg',
   },
-  viewport: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no',
 }
+
+// Move viewport to its own export
+export const viewport = {
+  width: "device-width",
+  initialScale: 1.0,
+  maximumScale: 1.0,
+  userScalable: false,
+}
+
 
 const body = Jost({
   weight: ["300","400", "500", "600", "700", "800","900"],

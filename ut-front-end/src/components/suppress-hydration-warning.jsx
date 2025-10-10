@@ -63,7 +63,7 @@ export default function SuppressHydrationWarning() {
       if (args[0] && suppressMessage(args[0])) {
         return;
       }
-      originalError.apply(console, args);
+      // originalError.apply(console, args);
     };
     
     console.warn = (...args) => {

@@ -32,7 +32,7 @@ exports.addFoodItem = async (req, res,next) => {
 
 
 // add all food items
-module.exports.addAllFoodItems = async (req,res,next) => {
+exports.addAllFoodItems = async (req,res,next) => {
   try {
     const result = await foodItemServices.addAllFoodItemService(req.body);
     res.json({
@@ -61,7 +61,7 @@ exports.getAllFoodItems = async (req,res,next) => {
 }
 
 // get all food items by type
-module.exports.getFoodItemsByType = async (req,res,next) => {
+exports.getFoodItemsByType = async (req,res,next) => {
   try {
     const result = await foodItemServices.getFoodItemTypeService(req);
     res.status(200).json({
@@ -75,7 +75,7 @@ module.exports.getFoodItemsByType = async (req,res,next) => {
 }
 
 // get offer food item controller
-module.exports.getOfferTimerFoodItems = async (req,res,next) => {
+exports.getOfferTimerFoodItems = async (req,res,next) => {
   try {
     const result = await foodItemServices.getOfferTimerFoodItemService(req.query.type);
     res.status(200).json({
@@ -88,7 +88,7 @@ module.exports.getOfferTimerFoodItems = async (req,res,next) => {
 }
 
 // get Popular Food Item By Type
-module.exports.getPopularFoodItemByType = async (req,res,next) => {
+exports.getPopularFoodItemByType = async (req,res,next) => {
   try {
     const result = await foodItemServices.getPopularFoodItemServiceByType(req.params.type);
     res.status(200).json({
@@ -101,7 +101,7 @@ module.exports.getPopularFoodItemByType = async (req,res,next) => {
 }
 
 // get top rated Food Items
-module.exports.getTopRatedFoodItems = async (req,res,next) => {
+exports.getTopRatedFoodItems = async (req,res,next) => {
   try {
     const result = await foodItemServices.getTopRatedFoodItemService();
     res.status(200).json({
@@ -137,14 +137,66 @@ exports.getRelatedFoodItems = async (req,res,next) => {
 }
 
 // update food item
-exports.updateFoodItem = async (req, res,next) => {
+// exports.= async (req, res,next) => {
+//   try {
+//     const foodItem = await foodItemServices.updateFoodItemService(req.params.id,req.body)
+//     res.send({ data: foodItem, message: "Food item updated successfully!" });
+//   } catch (error) {
+//     next(error)
+//   }
+// };
+
+
+// exports = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const payload = req.body;
+
+//     console.log("🛠️ Update food item:", id, payload);
+
+//     const foodItem = await foodItemServices.updateFoodItemService(id, payload);
+
+//     if (!foodItem) {
+//       return res.status(404).json({ message: "Food item not found" });
+//     }
+
+//     res.status(200).json({
+//       data: foodItem,
+//       message: "Food item updated successfully!",
+//     });
+//   } catch (error) {
+//     console.error("Error in updateFoodItem controller:", error);
+//     next(error);
+//   }
+// };
+
+
+
+// update food item
+exports.updateFoodItem = async (req, res, next) => {
   try {
-    const foodItem = await foodItemServices.updateFoodItemService(req.params.id,req.body)
-    res.send({ data: foodItem, message: "Food item updated successfully!" });
+    const { id } = req.params;
+    const payload = req.body;
+
+    console.log("🛠️ Update food item:", id, payload);
+
+    const foodItem = await foodItemServices.updateFoodItemService(id, payload);
+
+    if (!foodItem) {
+      return res.status(404).json({ message: "Food item not found" });
+    }
+
+    res.status(200).json({
+      data: foodItem,
+      message: "Food item updated successfully!",
+    });
   } catch (error) {
-    next(error)
+    console.error("Error in updateFoodItem controller:", error);
+    next(error);
   }
 };
+
+
 
 // review food items
 exports.reviewFoodItems = async (req, res,next) => {

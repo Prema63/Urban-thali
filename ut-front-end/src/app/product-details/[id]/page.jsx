@@ -11,7 +11,7 @@ export const metadata = {
 // Function to check if the product is a thali by fetching from API
 async function checkIfThali(id) {
   // Always fetch from API to check category
-  const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:9000';
+  const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7001';
   try {
     const response = await fetch(`${apiUrl}/api/food-item/single-food-item/${id}`);
     if (response.ok) {

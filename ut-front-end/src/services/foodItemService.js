@@ -2,8 +2,7 @@
 const API_BASE_URL = 'http://localhost:7001';
 
 class FoodItemService {
-  // Get all food items
-  async getAllFoodItems() {
+  async getAllFoodItemsService() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/api/food-item/all`);
       if (!response.ok) {
@@ -17,16 +16,30 @@ class FoodItemService {
     }
   }
 
-  // Get only thali items
-  async getThaliItems() {
-    try {
-      const allItems = await this.getAllFoodItems();
-      return allItems.filter(item => item.category?.name === 'Thali');
-    } catch (error) {
-      console.error('Error fetching thali items:', error);
+
+// get thali item
+ async getThaliItems() {
+  try {
+    const allItems = await this.getAllFoodItems();
+
+    if (!Array.isArray(allItems)) {
+      console.warn("getAllFoodItems() did not return an array:", allItems);
       return [];
     }
+
+    const thaliItems = allItems.filter(
+      (item) => item?.category?.name?.toLowerCase() === "thali"
+    );
+
+    console.log(` Found ${thaliItems.length} Thali items.`);
+    return thaliItems;
+  } catch (error) {
+    console.error("Error fetching thali items:", error);
+    return [];
   }
+}
+
+
 
   // Get only add-on items
   async getAddOnItems() {
@@ -42,7 +55,7 @@ class FoodItemService {
   // Get single food item by ID
   async getFoodItemById(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/api/food-item/single-food-item/${id}`);
+      const response = await fetch(`${API_BASE_URL}/api/food-item/single-food-item/${id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch food item');
       }
@@ -53,6 +66,7 @@ class FoodItemService {
       return null;
     }
   }
+
 
   // Get popular food items by type
   async getPopularFoodItems(type) {

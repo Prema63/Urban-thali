@@ -189,71 +189,167 @@ const useProductSubmit = () => {
     }
   };
   // handle edit product
+  // const handleEditProduct = async (data: any, id: string) => {
+  //   console.log("=== EDIT FORM SUBMISSION DEBUG ===");
+  //   console.log("Edit form data--->", data);
+  //   console.log("Form errors--->", errors);
+    
+  //   // Ensure brand is set - use first available brand as default if none selected
+  //   let selectedBrand = brand;
+  //   if (!brand.name || !brand.id) {
+  //     // Set default brand - Urban Kitchen from the API response
+  //     selectedBrand = {
+  //       name: "Urban Kitchen",
+  //       id: "68c1e077e3a8f3a04982b617"
+  //     };
+  //   }
+    
+  //   // product data
+  //   const productData = {
+  //     sku: data.SKU,
+  //     img: img,
+  //     name: data["Dish_Name"] || data.title || data.name, // Handle multiple field names
+  //     title: data["Dish_Name"] || data.title || data.name, // Add title field
+  //     slug: slugify(data["Dish_Name"] || data.title || data.name || "item", { replacement: "-", lower: true }),
+  //     unit: data.unit || "piece",
+  //     imageURLs: imageURLs,
+  //     parent: parent || "Thali",
+  //     children: children || "Main Course",
+  //     price: Number(data.price),
+  //     discount: Number(data["discount_percentage"]) || 0,
+  //     quantity: Number(data.quantity),
+  //     brand: selectedBrand, // Keep brand for backward compatibility
+  //     restaurant: selectedBrand, // Backend expects 'restaurant' not 'brand'
+  //     category: category,
+  //     status: status as "available" | "unavailable" | "discontinued",
+  //     productType: productType || "veg", // Add productType field
+  //     offerDate: {
+  //       startDate: offerDate.startDate,
+  //       endDate: offerDate.endDate,
+  //     },
+  //     foodType: productType && ["veg", "non-veg", "vegan", "jain"].includes(productType) ? productType : "veg", // Valid enum values only
+  //     description: data.description,
+  //     videoId: data.youtube_video_Id,
+  //     ingredients: data.ingredients ? data.ingredients.split(",").map((i: string) => i.trim()) : [],
+  //     preparationTime: Number(data.preparationTime) || Number(data["Preparation_Time_(mins)"]) || 5,
+  //     spiceLevel: data.spiceLevel || "mild",
+  //     thaliType: data.thaliType,
+  //     featured: data.featured || false,
+  //     additionalInformation: additionalInformation,
+  //     tags: tags,
+  //   };
+  //   console.log('edit productData---->',productData)
+  //   const res = await editProduct({ id: id, data: productData });
+  //   if ("error" in res) {
+  //     if ("data" in res.error) {
+  //       const errorData = res.error.data as { message?: string };
+  //       if (typeof errorData.message === "string") {
+  //         return notifyError(errorData.message);
+  //       }
+  //     }
+  //   } else {
+  //     notifySuccess("Product edit successFully");
+  //     setIsSubmitted(true);
+  //     router.push('/product-grid')
+  //     resetForm();
+  //   }
+  // };
+
+
+
+
   const handleEditProduct = async (data: any, id: string) => {
-    console.log("=== EDIT FORM SUBMISSION DEBUG ===");
-    console.log("Edit form data--->", data);
-    console.log("Form errors--->", errors);
-    
-    // Ensure brand is set - use first available brand as default if none selected
-    let selectedBrand = brand;
-    if (!brand.name || !brand.id) {
-      // Set default brand - Urban Kitchen from the API response
-      selectedBrand = {
+  console.log("=== EDIT FORM SUBMISSION DEBUG ===");
+  console.log("Edit form data--->", data);
+  console.log("Form errors--->", errors);
+
+  // ✅ Ensure brand/restaurant is defined
+  const selectedBrand = brand?.name
+    ? brand
+    : {
         name: "Urban Kitchen",
-        id: "68c1e077e3a8f3a04982b617"
+        id: "68c1e077e3a8f3a04982b617",
       };
-    }
-    
-    // product data
-    const productData = {
-      sku: data.SKU,
-      img: img,
-      name: data["Dish_Name"] || data.title || data.name, // Handle multiple field names
-      title: data["Dish_Name"] || data.title || data.name, // Add title field
-      slug: slugify(data["Dish_Name"] || data.title || data.name || "item", { replacement: "-", lower: true }),
-      unit: data.unit || "piece",
-      imageURLs: imageURLs,
-      parent: parent || "Thali",
-      children: children || "Main Course",
-      price: Number(data.price),
-      discount: Number(data["discount_percentage"]) || 0,
-      quantity: Number(data.quantity),
-      brand: selectedBrand, // Keep brand for backward compatibility
-      restaurant: selectedBrand, // Backend expects 'restaurant' not 'brand'
-      category: category,
-      status: status as "available" | "unavailable" | "discontinued",
-      productType: productType || "veg", // Add productType field
-      offerDate: {
-        startDate: offerDate.startDate,
-        endDate: offerDate.endDate,
-      },
-      foodType: productType && ["veg", "non-veg", "vegan", "jain"].includes(productType) ? productType : "veg", // Valid enum values only
-      description: data.description,
-      videoId: data.youtube_video_Id,
-      ingredients: data.ingredients ? data.ingredients.split(",").map((i: string) => i.trim()) : [],
-      preparationTime: Number(data.preparationTime) || Number(data["Preparation_Time_(mins)"]) || 5,
-      spiceLevel: data.spiceLevel || "mild",
-      thaliType: data.thaliType,
-      featured: data.featured || false,
-      additionalInformation: additionalInformation,
-      tags: tags,
-    };
-    console.log('edit productData---->',productData)
-    const res = await editProduct({ id: id, data: productData });
-    if ("error" in res) {
-      if ("data" in res.error) {
-        const errorData = res.error.data as { message?: string };
-        if (typeof errorData.message === "string") {
-          return notifyError(errorData.message);
-        }
-      }
-    } else {
-      notifySuccess("Product edit successFully");
-      setIsSubmitted(true);
-      router.push('/product-grid')
-      resetForm();
-    }
+
+  // ✅ Ensure category has fallback
+  const selectedCategory = category?.name
+    ? category
+    : {
+        name: "Thali",
+        id: "default-category-id",
+      };
+
+  const productData = {
+    sku: data.SKU,
+    img: img || "",
+    name: data["Dish_Name"] || data.title || data.name || "Untitled Item",
+    title: data["Dish_Name"] || data.title || data.name || "Untitled Item",
+    slug: slugify(
+      data["Dish_Name"] || data.title || data.name || "item",
+      { replacement: "-", lower: true }
+    ),
+    unit: data.unit || "plate",
+    imageURLs: imageURLs || [],
+    parent: parent || "Thali",
+    children: children || "Main Course",
+    price: Number(data.price) || 0,
+    discount: Number(data["discount_percentage"]) || 0,
+    quantity: Number(data.quantity) || 0,
+
+    // ✅ Always send valid objects
+    brand: selectedBrand,
+    restaurant: selectedBrand,
+    category: selectedCategory,
+
+    status: status || "available",
+    productType: productType || "veg",
+    offerDate: {
+      startDate: offerDate?.startDate || null,
+      endDate: offerDate?.endDate || null,
+    },
+    foodType:
+      ["veg", "non-veg", "vegan", "jain"].includes(productType)
+        ? productType
+        : "veg",
+    description: data.description || "",
+    videoId: data.youtube_video_Id || "",
+    ingredients: data.ingredients
+      ? data.ingredients.split(",").map((i: string) => i.trim())
+      : [],
+    preparationTime:
+      Number(data.preparationTime) ||
+      Number(data["Preparation_Time_(mins)"]) ||
+      5,
+    spiceLevel: data.spiceLevel || "mild",
+    thaliType: data.thaliType || "",
+    featured: data.featured || false,
+    additionalInformation: additionalInformation || [],
+    tags: tags || [],
   };
+
+  console.log("edit productData---->", productData);
+
+  try {
+    const res = await editProduct({ id, data: productData });
+    if ("error" in res) {
+      console.error("Edit error:", res.error);
+      const errorData = res?.error?.data as { message?: string };
+      if (typeof errorData?.message === "string") {
+        return notifyError(errorData.message);
+      }
+      return notifyError("Failed to edit product. Check required fields.");
+    }
+
+    notifySuccess("Product edited successfully!");
+    setIsSubmitted(true);
+    router.push("/product-grid");
+    resetForm();
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    notifyError("An unexpected error occurred while editing.");
+  }
+};
+
 
   return {
     sku,
