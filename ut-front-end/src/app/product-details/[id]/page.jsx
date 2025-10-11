@@ -14,6 +14,7 @@ async function checkIfThali(id) {
   const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7001';
   try {
     const response = await fetch(`${apiUrl}/api/food-item/single-food-item/${id}`);
+    cache: 'no-store'
     if (response.ok) {
       const data = await response.json();
       return data?.category?.name === 'Thali';

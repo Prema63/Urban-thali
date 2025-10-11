@@ -17,12 +17,14 @@ export const getCollectionImageById = (productId) => {
     "/assets/img/product/collection/collection-2.jpg",
     "/assets/img/product/collection/collection-3.jpg"
   ];
+
+  
   
   // Convert product ID to number and use modulo for consistent assignment
-  const numericId = typeof productId === 'string' ? 
+ const numericId = typeof productId === 'string' ? 
     productId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 
     productId;
-  
-  return collectionImages[numericId % collectionImages.length];
+return collectionImages[numericId % collectionImages.length];
+
 };
 

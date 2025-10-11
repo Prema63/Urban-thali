@@ -80,7 +80,7 @@ const CheckoutOrderArea = ({ checkoutData }) => {
            {/* discount */}
            <li className="tp-order-info-list-subtotal">
             <span>Discount</span>
-            <span>₹{discountAmount.toFixed(2)}</span>
+            {/* <span>₹{discountAmount.toFixed(2)}</span> */}
           </li>
 
           {/* total */}

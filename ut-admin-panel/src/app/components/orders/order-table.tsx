@@ -96,7 +96,7 @@ const OrderTable = () => {
             </tr>
           </thead>
           <tbody>
-            {orderItems.map((item) => (
+            {orderItems?.map((item) => (
                 <tr
                   key={item._id}
                   className="bg-white border-b border-gray6 last:border-0 text-start mx-9"
@@ -129,7 +129,7 @@ const OrderTable = () => {
                     )}
                   </td>
                   <td className="px-3 py-3 font-normal text-[#55585B] text-end">
-                    $
+                    ₹
                     {item.cart
                       .reduce((acc, curr) => acc + curr.price, 0)
                       .toFixed(2)}

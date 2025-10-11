@@ -7,9 +7,9 @@ const ProductTableHead = () => {
         <th scope="col" className="pr-8 py-3 text-tiny text-text2 uppercase font-semibold">
           Product
         </th>
-        {/* <th scope="col" className="px-3 py-3 text-tiny text-text2 uppercase font-semibold w-[170px] text-end">
+        <th scope="col" className="px-3 py-3 text-tiny text-text2 uppercase font-semibold w-[170px] text-end">
           SKU
-        </th> */}
+        </th>
         <th scope="col" className="px-3 py-3 text-tiny text-text2 uppercase font-semibold w-[170px] text-end">
           QTY
         </th>

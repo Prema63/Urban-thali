@@ -66,12 +66,12 @@ export default function SuppressHydrationWarning() {
       // originalError.apply(console, args);
     };
     
-    console.warn = (...args) => {
-      if (args[0] && suppressMessage(args[0])) {
-        return;
-      }
-      originalWarn.apply(console, args);
-    };
+    // console.warn = (...args) => {
+    //   if (args[0] && suppressMessage(args[0])) {
+    //     return;
+    //   }
+    //   originalWarn.apply(console, args);
+    // };
 
     // Set up MutationObserver to continuously remove extension attributes
     const observer = new MutationObserver((mutations) => {

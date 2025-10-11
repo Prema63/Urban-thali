@@ -42,5 +42,3 @@ export interface ICategoryDeleteRes {
   success?: boolean;
   message?: string;
 }
-
-
