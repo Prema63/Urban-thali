@@ -1,5 +1,8 @@
 const { secret } = require("../config/secret");
 const Order = require("../model/Order");
+const { confirmationTemplate, itemsToHtmlRows } = require('../services/email-templates');
+const { sendEmail } = require('../services/mailer.service');
+
 
 // addOrder
 exports.addOrder = async (req, res, next) => {
@@ -43,25 +46,48 @@ exports.getSingleOrder = async (req, res, next) => {
   }
 };
 
-exports.updateOrderStatus = async (req, res) => {
+
+// update code of order confirmation with sending emails
+exports.updateOrderStatus = async (req, res, next) => {
   const newStatus = req.body.status;
+
   try {
-    await Order.updateOne(
-      {
-        _id: req.params.id,
-      },
-      {
-        $set: {
-          status: newStatus,
-        },
-      }, { new: true })
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    // Update status
+    order.status = newStatus;
+    await order.save();
+
+    // Send confirmation email only if order is confirmed
+    if (newStatus === 'confirmed') {
+      const itemsHtml = itemsToHtmlRows(order.cart);
+
+      const htmlContent = confirmationTemplate({
+        name: order.name,
+        orderId: order.invoice,
+        itemsHtml,
+        total: order.totalAmount,
+        address: order.address,
+        eta: order.estimatedDeliveryTime || 'Soon',
+      });
+
+      await sendEmail({
+        to: order.email,  // user email from order
+        subject: `Your UrbanThali Order #${order.invoice} is Confirmed!`,
+        html: htmlContent,
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: 'Status updated successfully',
     });
-  }
-  catch (error) {
+
+  } catch (error) {
     console.log(error);
-    next(error)
+    next(error);
   }
 };
+
+

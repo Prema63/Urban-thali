@@ -66,7 +66,7 @@ const OrderDetailsArea = ({ id }: { id: string }) => {
                     /> */}
                   </h2>
                   <p className="text-base text-gray-500 dark:text-gray-400 mt-2">
-                    Dhaka, Bangladesh
+                     Mumbai, India
                   </p>
                 </div>
               </div>

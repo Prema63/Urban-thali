@@ -1,112 +1,8 @@
-// 'use client';
-// import dayjs from "dayjs";
-// import { useEffect, useRef, useState } from "react";
-// import { useDispatch, useSelector } from "react-redux";
-// import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
-// import { useForm } from "react-hook-form";
-// import { useRouter } from "next/navigation";   
-// import Cookies from "js-cookie";
-// import { useCreatePaymentIntentMutation } from "@/redux/features/paymentApi";
-
-
-// // internal imports
-// import useCartInfo from "./use-cart-info";
-// import { set_shipping } from "@/redux/features/order/orderSlice";
-// import { set_coupon } from "@/redux/features/coupon/couponSlice";
-// import { notifyError, notifySuccess } from "@/utils/toast";
-// import { useSaveOrderMutation } from "@/redux/features/order/orderApi";
-// import { useGetOfferCouponsQuery } from "@/redux/features/coupon/couponApi";
-
-// const useCheckoutSubmit = () => {
-//   const dispatch = useDispatch();
-//   const router = useRouter();
-
-//   // Stripe
-//   const stripe = useStripe();
-//   const elements = useElements();
-
-//   // Cart & total
-//   const { cart_products } = useSelector((state) => state.cart);
-//   const { total } = useCartInfo();
-//   const [cartTotal, setCartTotal] = useState(total);
-
-//   // Payment intent
-//   const [createPaymentIntent, { isLoading }] = useCreatePaymentIntentMutation();
-//   const [clientSecret, setClientSecret] = useState("");
-
-//   // Coupon, shipping, discount state
-//   const [discountAmount, setDiscountAmount] = useState(0);
-//   const [shippingCost, setShippingCost] = useState(0);
-
-//   // Form
-//   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
-
-//   // Coupon
-//   const [couponInfo, setCouponInfo] = useState({});
-//   const couponRef = useRef("");
-
-//   // Update cartTotal whenever total, shippingCost, or discountAmount changes
-//   useEffect(() => {
-//     const calculatedTotal = Number(total) + Number(shippingCost) - Number(discountAmount);
-//     setCartTotal(calculatedTotal);
-//   }, [total, shippingCost, discountAmount]);
-
-
-//   // Create Stripe PaymentIntent whenever cartTotal changes
-//   useEffect(() => {
-//     if (!cartTotal || cart_products.length === 0) return;
-
-//     const amount = Math.round(Number(cartTotal) * 100); 
-
-//     createPaymentIntent({ amount })
-//       .unwrap()
-//       .then((res) => {
-//         setClientSecret(res.clientSecret);
-//       })
-//       .catch((err) => {
-//         console.error("Payment Intent Error:", err);
-//       });
-//   }, [cartTotal, cart_products, createPaymentIntent]);
-
-//   //set shipping cost
-//   const handleShippingCost = (value) => setShippingCost(value);
- 
-
-//   return {
-//     clientSecret,
-//     createPaymentIntent,
-//     isLoading,
-//     cartTotal,
-//     shippingCost,
-//     handleShippingCost,
-//     register,
-//     handleSubmit,
-//     errors,
-//   };
-// };
-
-// export default useCheckoutSubmit;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 'use client';
 import * as dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-// import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
@@ -115,14 +11,14 @@ import useCartInfo from "./use-cart-info";
 import { set_shipping } from "@/redux/features/order/orderSlice";
 import { set_coupon } from "@/redux/features/coupon/couponSlice";
 import { notifyError, notifySuccess } from "@/utils/toast";
-import {useSaveOrderMutation} from "@/redux/features/order/orderApi";
+import { useSaveOrderMutation } from "@/redux/features/order/orderApi";
 import { useGetOfferCouponsQuery } from "@/redux/features/coupon/couponApi";
 
 const useCheckoutSubmit = () => {
   // offerCoupons
   const { data: offerCoupons, isError, isLoading } = useGetOfferCouponsQuery();
   // addOrder
-  const [saveOrder, {}] = useSaveOrderMutation();
+  const [saveOrder, { }] = useSaveOrderMutation();
   // cart_products
   const { cart_products } = useSelector((state) => state.cart);
   // user
@@ -156,14 +52,14 @@ const useCheckoutSubmit = () => {
   // showCard
   const [showCard, setShowCard] = useState(false);
   // coupon apply message
-  const [couponApplyMsg,setCouponApplyMsg] = useState("");
+  const [couponApplyMsg, setCouponApplyMsg] = useState("");
 
   const dispatch = useDispatch();
   const router = useRouter();
   // const stripe = useStripe();
   // const elements = useElements();
 
-  const {register,handleSubmit,setValue,formState: { errors }} = useForm();
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm();
 
   let couponRef = useRef("");
 
@@ -189,20 +85,20 @@ const useCheckoutSubmit = () => {
 
   //calculate total and discount value
   useEffect(() => {
-    console.log('=== DISCOUNT CALCULATION DEBUG ===');
-    console.log('Triggered by couponUpdateTrigger:', couponUpdateTrigger);
-    console.log('Current discount percentage:', discountPercentage);
-    console.log('Current discount product type:', discountProductType);
-    console.log('Cart products:', cart_products);
-    console.log('Total:', total);
-    console.log('Shipping cost:', shippingCost);
-    
+    // console.log('=== DISCOUNT CALCULATION DEBUG ===');
+    // console.log('Triggered by couponUpdateTrigger:', couponUpdateTrigger);
+    // console.log('Current discount percentage:', discountPercentage);
+    // console.log('Current discount product type:', discountProductType);
+    // console.log('Cart products:', cart_products);
+    // console.log('Total:', total);
+    // console.log('Shipping cost:', shippingCost);
+
     // Helper function to check if item matches discount product type
     const isMatchingProductType = (item) => {
-      const categoryName = typeof item.category === 'string' 
-        ? item.category 
+      const categoryName = typeof item.category === 'string'
+        ? item.category
         : item.category?.name;
-      
+
       // Check multiple ways to identify thali items
       return (
         item.productType === discountProductType ||
@@ -215,26 +111,26 @@ const useCheckoutSubmit = () => {
     };
 
     const result = cart_products?.filter(isMatchingProductType);
-    console.log('Filtered products for discount:', result);
-    
+    // console.log('Filtered products for discount:', result);
+
     const discountProductTotal = result?.reduce(
       (preValue, currentValue) =>
         preValue + currentValue.price * currentValue.orderQuantity,
       0
     );
-    console.log('Discount product total:', discountProductTotal);
-    
+    // console.log('Discount product total:', discountProductTotal);
+
     let totalValue = "";
     let subTotal = Number((total + shippingCost).toFixed(2));
     let discountTotal = Number(
       discountProductTotal * (discountPercentage / 100)
     );
     totalValue = Number(subTotal - discountTotal);
-    
-    console.log('Calculated discount total:', discountTotal);
-    console.log('Calculated cart total:', totalValue);
-    console.log('Setting discount amount to:', discountTotal);
-    
+
+    // console.log('Calculated discount total:', discountTotal);
+    // console.log('Calculated cart total:', totalValue);
+    // console.log('Setting discount amount to:', discountTotal);
+
     setDiscountAmount(discountTotal);
     setCartTotal(totalValue);
   }, [
@@ -246,27 +142,13 @@ const useCheckoutSubmit = () => {
     couponUpdateTrigger,
   ]);
 
-  // create payment intent - commented out for now
-  // useEffect(() => {
-  //   if (cartTotal) {
-  //     createPaymentIntent({
-  //       price: parseInt(cartTotal),
-  //     })
-  //       .then((data) => {
-  //         setClientSecret(data?.data?.clientSecret);
-  //       })
-  //       .catch((error) => {
-  //         console.log(error);
-  //       });
-  //   }
-  // }, [createPaymentIntent, cartTotal]);
 
   // handleCouponCode
   const handleCouponCode = (e) => {
     e.preventDefault();
-    
-    console.log('=== COUPON FUNCTION CALLED ===');
-    console.log('Coupon input value:', couponRef.current?.value);
+
+    // console.log('=== COUPON FUNCTION CALLED ===');
+    // console.log('Coupon input value:', couponRef.current?.value);
 
     if (!couponRef.current?.value) {
       notifyError("Please Input a Coupon Code!");
@@ -283,13 +165,13 @@ const useCheckoutSubmit = () => {
       (coupon) => coupon.couponCode === couponRef.current?.value
     );
 
-    console.log('=== COUPON APPLICATION DEBUG ===');
-    console.log('Available coupons:', offerCoupons);
-    console.log('Searching for coupon code:', couponRef.current?.value);
-    console.log('Found coupon result:', result);
-    console.log('Current discount percentage:', discountPercentage);
-    console.log('Current discount amount:', discountAmount);
-    console.log('Current discount product type:', discountProductType);
+    // console.log('=== COUPON APPLICATION DEBUG ===');
+    // console.log('Available coupons:', offerCoupons);
+    // console.log('Searching for coupon code:', couponRef.current?.value);
+    // console.log('Found coupon result:', result);
+    // console.log('Current discount percentage:', discountPercentage);
+    // console.log('Current discount amount:', discountAmount);
+    // console.log('Current discount product type:', discountProductType);
 
     if (result.length < 1) {
       notifyError("Please Input a Valid Coupon!");
@@ -311,7 +193,7 @@ const useCheckoutSubmit = () => {
       console.log('Coupon details:', result[0]);
       console.log('New discount percentage:', result[0].discountPercentage);
       console.log('New product type:', result[0].productType);
-      
+
       // Clear previous coupon state immediately
       console.log('Clearing previous coupon state...');
       setDiscountPercentage(0);
@@ -321,32 +203,32 @@ const useCheckoutSubmit = () => {
       setCouponApplyMsg("");
       localStorage.removeItem("couponInfo");
       dispatch(set_coupon(null));
-      
+
       // Force immediate recalculation by setting all values at once
       console.log('Applying new coupon...');
       const newCoupon = result[0];
       const newDiscountPercentage = newCoupon.discountPercentage;
       const newProductType = newCoupon.productType;
       const newMinimumAmount = newCoupon.minimumAmount;
-      
+
       console.log('New coupon values:', {
         discountPercentage: newDiscountPercentage,
         productType: newProductType,
         minimumAmount: newMinimumAmount
       });
-      
+
       // Set all new values
       setCouponApplyMsg(`Your Coupon ${newCoupon.title} is Applied on ${newProductType} productType!`)
       setMinimumAmount(newMinimumAmount);
       setDiscountProductType(newProductType);
       setDiscountPercentage(newDiscountPercentage);
       dispatch(set_coupon(newCoupon));
-      
+
       // Force immediate recalculation
       setCouponUpdateTrigger(prev => prev + 1);
-      
+
       console.log('New coupon applied successfully!');
-      
+
       setTimeout(() => {
         couponRef.current.value = "";
         setCouponApplyMsg("")
@@ -405,43 +287,79 @@ const useCheckoutSubmit = () => {
       shippingCost: shippingCost,
       discount: discountAmount,
       totalAmount: cartTotal,
-      orderNote:data.orderNote,
+      orderNote: data.orderNote,
       user: `${user?._id}`,
     };
     if (data.payment === 'Card') {
-      // Stripe payment temporarily disabled
-      notifyError("Card payment is temporarily unavailable. Please use Cash on Delivery.");
-      setIsCheckoutSubmit(false);
-      return;
-      // if (!stripe || !elements) {
-      //   return;
-      // }
-      // const card = elements.getElement(CardElement);
-      // if (card == null) {
-      //   return;
-      // }
-      // const { error, paymentMethod } = await stripe.createPaymentMethod({
-      //   type: 'card',
-      //   card: card,
-      // });
-      // if (error && !paymentMethod) {
-      //   setCardError(error.message);
-      //   setIsCheckoutSubmit(false);
-      // } else {
-      //   setCardError('');
-      //   const orderData = {
-      //     ...orderInfo,
-      //     cardInfo: paymentMethod,
-      //   };
+      try {
+        // 🔹 Create Razorpay order on your backend
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payment/razorpay-order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: cartTotal }),
+        });
 
-      //  return handlePaymentWithStripe(orderData);
-      // }
+        const orderDataRes = await response.json();
+
+        if (!orderDataRes?.id) {
+          notifyError("Failed to create Razorpay order!");
+          setIsCheckoutSubmit(false);
+          return;
+        }
+
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          amount: orderDataRes.amount,
+          currency: "INR",
+          name: "Urban Thali",
+          description: "Order Payment",
+          order_id: orderDataRes.id,
+          handler: async function (paymentResponse) {
+            // 🔹 Save order after successful payment
+            const finalOrder = {
+              ...orderInfo,
+              paymentId: paymentResponse.razorpay_payment_id,
+              razorpayOrderId: paymentResponse.razorpay_order_id,
+              razorpaySignature: paymentResponse.razorpay_signature,
+              paymentMethod: "Razorpay",
+              status: "Paid",
+            };
+
+            saveOrder(finalOrder).then((res) => {
+              if (res?.error) {
+                notifyError("Order could not be saved!");
+              } else {
+                localStorage.removeItem("cart_products");
+                localStorage.removeItem("couponInfo");
+                notifySuccess("Your Order Confirmed!");
+                router.push(`/order/${res.data?.order?._id}`);
+              }
+              setIsCheckoutSubmit(false);
+            });
+          },
+          prefill: {
+            name: `${data.firstName} ${data.lastName}`,
+            email: data.email,
+            contact: data.contactNo,
+          },
+          theme: { color: "#FCB53B" },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } catch (error) {
+        console.error(error);
+        notifyError("Something went wrong while starting Razorpay payment!");
+        setIsCheckoutSubmit(false);
+      }
     }
+
+
     if (data.payment === 'COD') {
       saveOrder({
         ...orderInfo
       }).then(res => {
-        if(res?.error){
+        if (res?.error) {
         }
         else {
           localStorage.removeItem("cart_products")
@@ -456,48 +374,48 @@ const useCheckoutSubmit = () => {
 
 
   // handlePaymentWithStripe - commented out for now
-  // const handlePaymentWithStripe = async (order) => {
-  //   try {
-  //     const {paymentIntent, error:intentErr} = await stripe.confirmCardPayment(
-  //       clientSecret,
-  //       {
-  //         payment_method: {
-  //           card: elements.getElement(CardElement),
-  //           billing_details: {
-  //             name: user?.firstName,
-  //             email: user?.email,
-  //           },
-  //         },
-  //       },
-  //     );
-  //     if (intentErr) {
-  //       notifyError(intentErr.message);
-  //     } else {
-  //       // notifySuccess("Your payment processed successfully");
-  //     }
+  const handlePaymentWithStripe = async (order) => {
+    try {
+      const { paymentIntent, error: intentErr } = await stripe.confirmCardPayment(
+        clientSecret,
+        {
+          payment_method: {
+            card: elements.getElement(CardElement),
+            billing_details: {
+              name: user?.firstName,
+              email: user?.email,
+            },
+          },
+        },
+      );
+      if (intentErr) {
+        notifyError(intentErr.message);
+      } else {
+        // notifySuccess("Your payment processed successfully");
+      }
 
-  //     const orderData = {
-  //       ...order,
-  //       paymentIntent,
-  //     };
+      const orderData = {
+        ...order,
+        paymentIntent,
+      };
 
-  //     saveOrder({
-  //       ...orderData
-  //     })
-  //     .then((result) => {
-  //         if(result?.error){
-  //         }
-  //         else {
-  //           localStorage.removeItem("couponInfo");
-  //           notifySuccess("Your Order Confirmed!");
-  //           router.push(`/order/${result.data?.order?._id}`);
-  //         }
-  //       })
-  //      } 
-  //   catch (err) {
-  //     console.log(err);
-  //   }
-  // };
+      saveOrder({
+        ...orderData
+      })
+        .then((result) => {
+          if (result?.error) {
+          }
+          else {
+            localStorage.removeItem("couponInfo");
+            notifySuccess("Your Order Confirmed!");
+            router.push(`/order/${result.data?.order?._id}`);
+          }
+        })
+    }
+    catch (err) {
+      console.log(err);
+    }
+  };
 
   return {
     handleCouponCode,
