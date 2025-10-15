@@ -224,13 +224,20 @@ import { useSelector } from "react-redux";
 import useCartInfo from "@/hooks/use-cart-info";
 import ErrorMsg from "../common/error-msg";
 import CheckoutCoupon from "./checkout-coupon";
+import axios from "axios";
+import { useForm } from "react-hook-form";
+
+const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7001";
+
+
+
 
 const CheckoutOrderArea = ({ checkoutData, user }) => {
   const {
     handleShippingCost,
     cartTotal = 0,
-    register,
-    errors,
+    // register,
+    // errors,
     shippingCost,
     discountAmount,
     handleCouponCode,
@@ -240,260 +247,291 @@ const CheckoutOrderArea = ({ checkoutData, user }) => {
     isCheckoutSubmit,
   } = checkoutData;
 
+  const {
+  register,
+  handleSubmit,
+  formState: { errors },
+} = useForm();
+
+  const [checkoutForm, setCheckoutForm] = useState({
+    name: user?.name || "",
+    address: user?.address || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    city: user?.city || "",
+    country: user?.country || "",
+    zipCode: user?.zipCode || "",
+    shippingOption: "",
+    orderNote: "",
+  });
+
   const { cart_products } = useSelector((state) => state.cart);
   const { total } = useCartInfo();
 
   const [selectedPayment, setSelectedPayment] = useState("");
 
-  // const handlePlaceOrder = async (e) => {
-  //   e.preventDefault();
-  //   if (!selectedPayment) return;
+  // In CheckoutOrderArea.jsx
+  const handlePlaceOrder = async (formData) => {
+    const {
+      firstName,
+      lastName,
+      address,
+      email,
+      contactNo,
+      city,
+      country,
+      zipCode,
+      shippingOption,
+      orderNote,
+    } = formData;
 
-  //   if (selectedPayment === "Razorpay") {
-  //     try {
-  //       // Call your backend API to create Razorpay order
-  //       const res = await fetch("/api/razorpay", {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({ amount: cartTotal }),
-  //       });
-  //       const order = await res.json();
-
-  //       const options = {
-  //         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-  //         amount: order.amount,
-  //         currency: order.currency,
-  //         name: "Urban Thali",
-  //         description: `Order #${order.id}`,
-  //         order_id: order.id,
-  //         handler: function (response) {
-  //           // Handle success
-  //           console.log("Payment successful:", response);
-
-  //           // TODO: save payment info to DB along with cart_products and user info
-  //         },
-  //         prefill: {
-  //           name: user?.name || "",
-  //           email: user?.email || "",
-  //           contact: user?.phone || "",
-  //         },
-  //         notes: {
-  //           cart: JSON.stringify(cart_products),
-  //           shippingCost: shippingCost,
-  //           discount: discountAmount,
-  //           total: cartTotal,
-  //         },
-  //         theme: { color: "#FCB53B" },
-  //       };
-
-  //       const rzp = new window.Razorpay(options);
-  //       rzp.open();
-  //     } catch (error) {
-  //       console.error("Razorpay order creation failed:", error);
-  //     }
-  //   }
-
-  //   if (selectedPayment === "COD") {
-  //     // Dynamic COD order handling
-  //     const orderData = {
-  //       user,
-  //       cart: cart_products,
-  //       total: cartTotal,
-  //       shippingCost,
-  //       discountAmount,
-  //       paymentMethod: "COD",
-  //     };
-  //     console.log("COD order placed:", orderData);
-  //     alert("Order placed with Cash on Delivery!");
-  //     // TODO: save COD order to DB
-  //   }
-  // };
-
-  const handlePlaceOrder = (e) => {
-    e.preventDefault();
-
-    if (!selectedPayment) {
-      alert("Please select a payment option!");
+    // Validation
+    if (
+      !firstName ||
+      !lastName ||
+      !address ||
+      !email ||
+      !contactNo ||
+      !city ||
+      !country ||
+      !zipCode
+    ) {
+      alert("Please fill all required shipping details.");
       return;
     }
 
-    // ---------------- RAZORPAY ----------------
-    if (selectedPayment === "Razorpay") {
-      if (!window.Razorpay) {
-        alert("Razorpay SDK not loaded. Please check your script.");
-        return;
+    // Build base order payload
+    const baseOrderData = {
+      user: user._id,
+      cart: cart_products,
+      name: `${firstName} ${lastName}`,
+      address,
+      email,
+      contact: contactNo,
+      city,
+      country,
+      zipCode,
+      subTotal: cartTotal,
+      shippingCost: shippingCost || 0,
+      discount: discountAmount || 0,
+      totalAmount: cartTotal + (shippingCost || 0) - (discountAmount || 0),
+      paymentMethod: selectedPayment,
+      shippingOption: shippingOption || "",
+      orderNote: orderNote || "",
+    };
+
+    try {
+      if (selectedPayment === "Razorpay") {
+        const { data: razorOrder } = await axios.post(
+          `${apiUrl}/api/razorpay/create-order`,
+          { amount: baseOrderData.totalAmount }
+        );
+
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          amount: razorOrder.amount,
+          currency: razorOrder.currency,
+          name: "Urban Thali",
+          description: `Order #${razorOrder.id}`,
+          order_id: razorOrder.id,
+          handler: async function (response) {
+            const orderData = {
+              ...baseOrderData,
+              paymentIntent: {
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+              },
+            };
+
+            try {
+              await axios.post(`${apiUrl}/api/order/saveOrder`, orderData);
+              alert("✅ Payment successful! Your order has been placed.");
+            } catch (saveError) {
+              console.error(
+                "❌ Failed to save order:",
+                saveError.response?.data || saveError
+              );
+              alert("Payment done, but order save failed. Contact support.");
+            }
+          },
+          prefill: {
+            name: `${firstName} ${lastName}`,
+            email,
+            contact: contactNo,
+          },
+          notes: {
+            cart: JSON.stringify(cart_products),
+            shippingCost,
+            discount: discountAmount,
+            total: baseOrderData.totalAmount,
+          },
+          theme: { color: "#FCB53B" },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } else if (selectedPayment === "COD") {
+        const orderData = { ...baseOrderData, paymentStatus: "Pending" };
+        await axios.post(`${apiUrl}/api/order/saveOrder`, orderData);
+        alert("🧾 Order placed successfully with Cash on Delivery!");
       }
-
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Razorpay key
-        amount: Math.round(cartTotal * 100), // amount in paise
-        currency: "INR",
-        name: "Urban Thali",
-        description: `Order Payment - ${new Date().toLocaleString()}`,
-        handler: function (response) {
-          console.log("Payment successful:", response);
-
-          // TODO: Save payment info + order details to DB
-          alert("Payment Successful!");
-        },
-        prefill: {
-          name: user?.name || "",
-          email: user?.email || "",
-          contact: user?.phone || "",
-        },
-        notes: {
-          cart: JSON.stringify(cart_products),
-          shippingCost: shippingCost,
-          discount: discountAmount,
-          total: cartTotal,
-        },
-        theme: { color: "#FCB53B" },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    }
-
-    // ---------------- CASH ON DELIVERY ----------------
-    if (selectedPayment === "COD") {
-      const orderData = {
-        user,
-        cart: cart_products,
-        total: cartTotal,
-        shippingCost,
-        discountAmount,
-        paymentMethod: "COD",
-        date: new Date(),
-      };
-
-      console.log("COD order placed:", orderData);
-      alert("Order placed with Cash on Delivery!");
-
-      // TODO: Save orderData to your database
+    } catch (error) {
+      console.error("❌ Order process failed:", error.response?.data || error);
+      alert("Something went wrong while placing the order.");
     }
   };
 
   return (
-    <div className="tp-checkout-place white-bg">
-      <h3 className="tp-checkout-place-title">Your Order</h3>
+    <form onSubmit={handleSubmit(handlePlaceOrder)}>
+      <div className="tp-checkout-place white-bg">
+        <h3 className="tp-checkout-place-title">Your Order</h3>
 
-      {/* Coupon Section */}
-      <div
-        className="tp-checkout-coupon-section"
-        style={{
-          marginBottom: "20px",
-          padding: "20px",
-          backgroundColor: "#f8f9fa",
-          borderRadius: "8px",
-          border: "1px solid #e9ecef",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-        }}
-      >
-        <CheckoutCoupon
-          handleCouponCode={handleCouponCode}
-          couponRef={couponRef}
-          couponApplyMsg={couponApplyMsg}
-          clearCoupon={clearCoupon}
-        />
-      </div>
+        {/* Coupon Section */}
+        <div
+          className="tp-checkout-coupon-section"
+          style={{
+            marginBottom: "20px",
+            padding: "20px",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
+            border: "1px solid #e9ecef",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        >
+          <CheckoutCoupon
+            handleCouponCode={handleCouponCode}
+            couponRef={couponRef}
+            couponApplyMsg={couponApplyMsg}
+            clearCoupon={clearCoupon}
+          />
+        </div>
 
-      <div className="tp-order-info-list">
-        <ul>
-          <li className="tp-order-info-list-header">
-            <h4>Product</h4>
-            <h4>Total</h4>
-          </li>
-
-          {cart_products?.map((item) => (
-            <li key={item._id} className="tp-order-info-list-desc">
-              <p>
-                {item.title} <span> x {item.orderQuantity}</span>
-              </p>
-              <span>₹{item.price.toFixed(2)}</span>
+        <div className="tp-order-info-list">
+          <ul>
+            <li className="tp-order-info-list-header">
+              <h4>Product</h4>
+              <h4>Total</h4>
             </li>
-          ))}
 
-          <li className="tp-order-info-list-subtotal">
-            <span>Subtotal</span>
-            <span>₹{total.toFixed(2)}</span>
-          </li>
+            {cart_products?.map((item) => (
+              <li key={item._id} className="tp-order-info-list-desc">
+                <p>
+                  {item.title} <span> x {item.orderQuantity}</span>
+                </p>
+                <span>₹{item.price.toFixed(2)}</span>
+              </li>
+            ))}
 
-          <li className="tp-order-info-list-subtotal">
-            <span>Shipping Cost</span>
-            <span>₹{shippingCost.toFixed(2)}</span>
-          </li>
+            <li className="tp-order-info-list-subtotal">
+              <span>Subtotal</span>
+              <span>₹{total.toFixed(2)}</span>
+            </li>
 
-          <li className="tp-order-info-list-subtotal">
-            <span>Discount</span>
-            <span>₹{discountAmount?.toFixed(2) || 0}</span>
-          </li>
+            <li className="tp-order-info-list-subtotal">
+              <span>Shipping Cost</span>
+              <span>₹{shippingCost.toFixed(2)}</span>
+            </li>
 
-          <li className="tp-order-info-list-total">
-            <span>Total</span>
-            <span>₹{parseFloat(cartTotal).toFixed(2)}</span>
-          </li>
-        </ul>
-      </div>
+            <li className="tp-order-info-list-subtotal">
+              <span>Discount</span>
+              <span>₹{discountAmount?.toFixed(2) || 0}</span>
+            </li>
 
-      <div className="tp-checkout-payment">
-        <div className="tp-checkout-payment-item">
-          <input
-            {...register("payment", {
-              required: "Payment Option is required!",
-            })}
-            type="radio"
-            id="razorpay"
-            name="payment"
-            value="Razorpay"
-            onChange={() => setSelectedPayment("Razorpay")}
-          />
-          <label htmlFor="razorpay">Razorpay (Cards, UPI, Net Banking)</label>
-          <ErrorMsg msg={errors?.payment?.message} />
+            <li className="tp-order-info-list-total">
+              <span>Total</span>
+              <span>₹{parseFloat(cartTotal).toFixed(2)}</span>
+            </li>
+          </ul>
         </div>
 
-        <div className="tp-checkout-payment-item">
-          <input
-            {...register("payment", {
-              required: "Payment Option is required!",
-            })}
-            type="radio"
-            id="cod"
-            name="payment"
-            value="COD"
-            onChange={() => setSelectedPayment("COD")}
-          />
-          <label htmlFor="cod">Cash on Delivery</label>
-          <ErrorMsg msg={errors?.payment?.message} />
-        </div>
-      </div>
+        <div className="tp-checkout-payment">
+          <div className="tp-checkout-payment-item">
+            <input
+              {...register("payment", {
+                required: "Payment Option is required!",
+              })}
+              type="radio"
+              id="razorpay"
+              name="payment"
+              value="Razorpay"
+              onChange={() => setSelectedPayment("Razorpay")}
+            />
+            <label htmlFor="razorpay">Razorpay (Cards, UPI, Net Banking)</label>
+            <ErrorMsg msg={errors?.payment?.message} />
+          </div>
 
-      <button
-        type="submit"
-        onClick={handlePlaceOrder}
-        disabled={isCheckoutSubmit || !selectedPayment}
-        className="tp-checkout-btn w-100"
-        style={{
-          backgroundColor:
-            isCheckoutSubmit || !selectedPayment ? "#6b7280" : "#FCB53B",
-          cursor:
-            isCheckoutSubmit || !selectedPayment ? "not-allowed" : "pointer",
-          opacity: isCheckoutSubmit || !selectedPayment ? 0.6 : 1,
-          color: "white",
-          border: "none",
-          padding: "12px 24px",
-          borderRadius: "6px",
-          fontSize: "16px",
-          fontWeight: "600",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "100%",
-          textAlign: "center",
-        }}
-      >
-        Place Order
-      </button>
-    </div>
+          <div className="tp-checkout-payment-item">
+            <input
+              {...register("payment", {
+                required: "Payment Option is required!",
+              })}
+              type="radio"
+              id="cod"
+              name="payment"
+              value="COD"
+              onChange={() => setSelectedPayment("COD")}
+            />
+            <label htmlFor="cod">Cash on Delivery</label>
+            <ErrorMsg msg={errors?.payment?.message} />
+          </div>
+        </div>
+
+        {/* <button
+          type="submit"
+          onClick={handlePlaceOrder} // Pass form data
+          disabled={isCheckoutSubmit || !selectedPayment}
+          className="tp-checkout-btn w-100"
+          style={{
+            backgroundColor:
+              isCheckoutSubmit || !selectedPayment ? "#6b7280" : "#FCB53B",
+            cursor:
+              isCheckoutSubmit || !selectedPayment ? "not-allowed" : "pointer",
+            opacity: isCheckoutSubmit || !selectedPayment ? 0.6 : 1,
+            color: "white",
+            border: "none",
+            padding: "12px 24px",
+            borderRadius: "6px",
+            fontSize: "16px",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          Place Order
+        </button> */}
+
+        <button
+          type="submit"
+          disabled={isCheckoutSubmit || !selectedPayment}
+          className="tp-checkout-btn w-100"
+          style={{
+            backgroundColor:
+              isCheckoutSubmit || !selectedPayment ? "#6b7280" : "#FCB53B",
+            cursor:
+              isCheckoutSubmit || !selectedPayment ? "not-allowed" : "pointer",
+            opacity: isCheckoutSubmit || !selectedPayment ? 0.6 : 1,
+            color: "white",
+            border: "none",
+            padding: "12px 24px",
+            borderRadius: "6px",
+            fontSize: "16px",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          Place Order
+        </button>
+
+      </div>
+    </form>
   );
 };
 
