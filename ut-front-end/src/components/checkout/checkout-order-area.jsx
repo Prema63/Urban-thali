@@ -7,7 +7,7 @@ import CheckoutCoupon from "./checkout-coupon";
 
 const CheckoutOrderArea = ({ checkoutData }) => {
   const {
-    handleShippingCost, 
+    handleShippingCost,
     cartTotal = 0,
     // stripe,
     isCheckoutSubmit,
@@ -26,80 +26,78 @@ const CheckoutOrderArea = ({ checkoutData }) => {
 
   const { cart_products } = useSelector((state) => state.cart);
   const { total } = useCartInfo();
-  const [loader, setloader] = useState(false)
 
-// razorpay
   const handleRazorpayPayment = async () => {
-  try {
-    console.log("🟡 Creating Razorpay order...");
-    const orderRes = await fetch("http://localhost:7001/api/razorpay/create-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: orderData.totalAmount }),
-    });
+    console.log("Button clicked--frontend res:");
+    try {
+      const lib = "http://localhost:7001";
+      
+      //  Create order
+      const orderRes = await fetch(`${lib}/api/razorpay/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: orderData.totalAmount }),
+      });
 
-    const order = await orderRes.json();
-    console.log("🔵 Order Response:", order);
+      const order = await orderRes.json();
+      console.log("Order response is--frontend res:", order);
+      if (!order.id) {
+        alert("Failed to create Razorpay order");
+        return `order id not get--frontend error`;
+      }
 
-    if (!order.id) {
-      console.error("❌ Failed to create Razorpay order:", order);
-      alert("Failed to create Razorpay order");
-      return;
+      // Initialize Razorpay
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Your Store Name",
+        description: "Online Payment",
+        order_id: order.id,
+        handler: async function (response) {
+          //  Verify payment 
+          const verifyRes = await fetch(`${lib}/api/razorpay/verify-payment`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              ...orderData,
+            }),
+          });
+
+          const data = await verifyRes.json();
+          if (data.success) {
+            alert("Payment successful and order stored!");
+            console.log(
+              "Payment is succesfull also store order in Databse--admin panel---frontend res:"
+            );
+            // window.location.href = "/order-success";
+          } else {
+            alert("Payment verification failed--frontend res");
+          }
+        },
+        prefill: {
+          name: orderData.name,
+          email: orderData.email,
+          contact: orderData.contact,
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Razorpay payment error--frontend res:", error);
+      alert("Something went wrong during payment--fontend res");
+      console.log(
+        "Razor pay is not open while click on place order btn--frontend res"
+      );
     }
-
-    // Load Razorpay script (if not already loaded)
-    if (!window.Razorpay) {
-      alert("Razorpay SDK not loaded. Please refresh the page.");
-      return;
-    }
-
-    const options = {
-      key: process.env.REACT_APP_RAZORPAY_KEY_ID,
-      amount: order.amount,
-      currency: order.currency,
-      name: "Your Store Name",
-      description: "Order Payment",
-      order_id: order.id,
-      handler: async function (response) {
-        console.log("✅ Razorpay Response:", response);
-        const verifyRes = await fetch("http://localhost:7001/api/razorpay/verify-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            ...orderData,
-          }),
-        });
-        const verifyData = await verifyRes.json();
-        console.log("🟢 Verify Response:", verifyData);
-
-        if (verifyData.success) {
-          alert("✅ Payment successful & order stored!");
-          window.location.href = "/order-success";
-        } else {
-          alert("❌ Payment verification failed");
-        }
-      },
-      prefill: {
-        name: orderData.name,
-        email: orderData.email,
-        contact: orderData.contact,
-      },
-      theme: { color: "#3399cc" },
-    };
-
-    console.log("🟢 Opening Razorpay Checkout...");
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-
-  } catch (error) {
-    console.error("🔥 Razorpay Payment Error:", error);
-    alert("Something went wrong during payment");
-  }
-};
-
+  };
 
   return (
     <div className="tp-checkout-place white-bg">
@@ -204,8 +202,7 @@ const CheckoutOrderArea = ({ checkoutData }) => {
             </div>
           )} */}
           <ErrorMsg msg={errors?.payment?.message} />
-        </div>  
-
+        </div>
 
         {/* Razorpay setup */}
         <div className="tp-checkout-payment-item">
@@ -223,7 +220,6 @@ const CheckoutOrderArea = ({ checkoutData }) => {
           <ErrorMsg msg={errors?.payment?.message} />
         </div>
 
-
         {/* COD setup */}
         <div className="tp-checkout-payment-item">
           <input
@@ -239,14 +235,12 @@ const CheckoutOrderArea = ({ checkoutData }) => {
           <label htmlFor="cod">Cash on Delivery</label>
           <ErrorMsg msg={errors?.payment?.message} />
         </div>
-
-        
       </div>
 
       {/* place order button */}
       <button
-       onClick={handleRazorpayPayment}
         type="submit"
+        onClick={handleRazorpayPayment}
         disabled={(showCard && !stripe) || isCheckoutSubmit}
         className="tp-checkout-btn w-100"
         style={{
@@ -272,8 +266,6 @@ const CheckoutOrderArea = ({ checkoutData }) => {
       >
         Place Order
       </button>
-
-     
     </div>
   );
 };

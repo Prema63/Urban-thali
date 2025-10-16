@@ -10,29 +10,34 @@ const razorpay = new Razorpay({
 //  Create Razorpay Order
 const createOrder = async (req, res) => {
   try {
-    console.log("🟢 Received create-order request:", req.body);
-    const { amount } = req.body;
+    console.log("Received create-order request:", req.body);
 
-    if (!amount) {
-      console.log("❌ No amount received");
-      return res.status(400).json({ error: "Amount is required" });
+    const { amount } = req.body;
+    if (!amount || isNaN(amount) || amount <= 0) {
+      console.log("Invalid amount:", amount);
+      return res.status(400).json({ error: "Amount is required and must be > 0" });
+    }
+
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      console.log("Razorpay keys missing");
+      return res.status(500).json({ error: "Razorpay keys are not configured" });
     }
 
     const options = {
-      amount: Math.round(amount * 100),
+      amount: Math.round(amount * 100), 
       currency: "INR",
       receipt: `receipt_order_${Date.now()}`,
     };
 
     const order = await razorpay.orders.create(options);
-    console.log("✅ Razorpay order created:", order);
+    console.log("Razorpay order created:", order);
 
-    return res.status(200).json(order);
+    res.status(200).json(order);
   } catch (error) {
-    console.error("🔥 Razorpay Create Order Error:", error);
-    return res.status(500).json({ error: error.message });
+    console.error(" Razorpay Create Order Error:", error);
+    res.status(500).json({ error: error.message });
   }
-};
+};;
 
 
 
