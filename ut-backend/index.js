@@ -48,7 +48,6 @@ app.use("/api/admin", adminRoutes);
 
 // razorPay Route
 app.use("/api/razorpay", razorpayRouter);
-
 // root route
 app.get("/", (req, res) => res.send("Apps worked successfully"));
 

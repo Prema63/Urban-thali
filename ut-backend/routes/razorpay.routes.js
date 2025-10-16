@@ -1,11 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { createOrder, verifyPayment } = require("../api/razorpay");
+const { createOrder, verifyAndSaveOrder } = require("../controllers/razorpayController");
 
-// Create Order
 router.post("/create-order", createOrder);
-
-// Verify Payment
-router.post("/verify-payment", verifyPayment);
+router.post("/verify-payment", verifyAndSaveOrder);
 
 module.exports = router;

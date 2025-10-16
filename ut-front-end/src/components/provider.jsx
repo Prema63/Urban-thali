@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import store from "@/redux/store";
 import { Provider } from "react-redux";
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import Script from 'next/script';
 
 const Providers = ({ children }) => {
   useEffect(() => {
@@ -23,3 +24,5 @@ const Providers = ({ children }) => {
 };
 
 export default Providers;
+
+
