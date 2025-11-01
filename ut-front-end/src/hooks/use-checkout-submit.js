@@ -1,4 +1,5 @@
 'use client';
+
 import * as dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -99,7 +100,7 @@ const useCheckoutSubmit = () => {
         ? item.category
         : item.category?.name;
 
-      // Check multiple ways to identify thali items
+      // Check multiple ways to identify thali item
       return (
         item.productType === discountProductType ||
         categoryName === discountProductType ||
